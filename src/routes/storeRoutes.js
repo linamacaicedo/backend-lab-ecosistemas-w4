@@ -1,9 +1,14 @@
 import express from "express";
-import { createNewStore, getStores } from "../controllers/storeController.js";
+import {
+  getStores,
+  getMyStore,
+  toggleStoreStatus
+} from "../controllers/storeController.js";
 
 const router = express.Router();
 
-router.post("/", createNewStore);
 router.get("/", getStores);
+router.get("/user/:userId", getMyStore);
+router.put("/:id/status", toggleStoreStatus);
 
 export default router;

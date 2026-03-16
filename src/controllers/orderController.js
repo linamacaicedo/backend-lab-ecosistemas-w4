@@ -1,43 +1,153 @@
-import { createOrder, getAllOrders, getOrderById, updateOrder } from "../models/orderModel.js";
+import {
+  createOrder,
+  getAllOrders,
+  getOrderById,
+  updateOrder,
+  getOrdersByConsumerId,
+  getOrdersByStoreId,
+  getAvailableOrders,
+  getAcceptedOrdersByDeliveryId
+} from "../models/orderModel.js";
 
-export const createNewOrder = (req, res) => {
-  const { consumerId, productId, quantity } = req.body;
+export const createNewOrder = async (req, res) => {
+  try {
+    const { consumerId, storeId, productId, quantity } = req.body;
 
-  if (!consumerId || !productId || !quantity) {
-    return res.status(400).json({ message: "Missing required fields" });
+    if (!consumerId || !storeId || !productId || !quantity) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const newOrder = {
+      id: Date.now(),
+      consumerId,
+      storeId,
+      productId,
+      quantity,
+      status: "pending",
+      deliveryId: null
+    };
+
+    const savedOrder = await createOrder(newOrder);
+
+    res.status(201).json(savedOrder);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-
-  const newOrder = {
-    id: Date.now(),
-    consumerId,
-    productId,
-    quantity,
-    status: "pending"
-  };
-
-  createOrder(newOrder);
-
-  res.status(201).json(newOrder);
 };
 
-export const getOrders = (req, res) => {
-  const orders = getAllOrders();
-  res.json(orders);
+export const getOrders = async (req, res) => {
+  try {
+    const orders = await getAllOrders();
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-export const acceptOrder = (req, res) => {
-  const { orderId, deliveryId } = req.body;
-
-  const order = getOrderById(orderId);
-
-  if (!order) {
-    return res.status(404).json({ message: "Order not found" });
+export const getMyOrders = async (req, res) => {
+  try {
+    const { consumerId } = req.params;
+    const orders = await getOrdersByConsumerId(consumerId);
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
+};
 
-  order.status = "accepted";
-  order.deliveryId = deliveryId;
+export const getStoreOrders = async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const orders = await getOrdersByStoreId(storeId);
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-  updateOrder(order);
+export const getDeliveryAvailableOrders = async (req, res) => {
+  try {
+    const orders = await getAvailableOrders();
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-  res.json(order);
+export const getDeliveryAcceptedOrders = async (req, res) => {
+  try {
+    const { deliveryId } = req.params;
+    const orders = await getAcceptedOrdersByDeliveryId(deliveryId);
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getSingleOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await getOrderById(id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const acceptOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { deliveryId } = req.body;
+
+    const order = await getOrderById(id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (!deliveryId) {
+      return res.status(400).json({ message: "deliveryId is required" });
+    }
+
+    const updatedOrder = await updateOrder(id, {
+      status: "accepted",
+      deliveryId
+    });
+
+    res.json(updatedOrder);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const declineOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const updatedOrder = await updateOrder(id, {
+      status: "declined"
+    });
+
+    res.json(updatedOrder);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const markOrderDelivered = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const updatedOrder = await updateOrder(id, {
+      status: "delivered"
+    });
+
+    res.json(updatedOrder);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
