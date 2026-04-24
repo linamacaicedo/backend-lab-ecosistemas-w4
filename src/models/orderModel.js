@@ -6,10 +6,7 @@ export const createOrder = async (order) => {
     .insert([order])
     .select();
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data[0];
 };
 
@@ -19,10 +16,7 @@ export const getAllOrders = async () => {
     .select("*")
     .order("createdAt", { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data;
 };
 
@@ -33,10 +27,7 @@ export const getOrderById = async (id) => {
     .eq("id", id)
     .maybeSingle();
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data;
 };
 
@@ -47,10 +38,22 @@ export const updateOrder = async (id, fields) => {
     .eq("id", id)
     .select();
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
+  return data[0];
+};
 
+export const updateOrderPosition = async (id, lat, lng) => {
+  const position = `SRID=4326;POINT(${lng} ${lat})`;
+
+  const { data, error } = await supabase
+    .from("orders")
+    .update({
+      delivery_position: position,
+    })
+    .eq("id", id)
+    .select();
+
+  if (error) throw new Error(error.message);
   return data[0];
 };
 
@@ -61,10 +64,7 @@ export const getOrdersByConsumerId = async (consumerId) => {
     .eq("consumerId", consumerId)
     .order("createdAt", { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data;
 };
 
@@ -75,10 +75,7 @@ export const getOrdersByStoreId = async (storeId) => {
     .eq("storeId", storeId)
     .order("createdAt", { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data;
 };
 
@@ -86,14 +83,11 @@ export const getAvailableOrders = async () => {
   const { data, error } = await supabase
     .from("orders")
     .select("*")
-    .eq("status", "pending")
+    .eq("status", "Creado")
     .is("deliveryId", null)
     .order("createdAt", { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data;
 };
 
@@ -102,12 +96,9 @@ export const getAcceptedOrdersByDeliveryId = async (deliveryId) => {
     .from("orders")
     .select("*")
     .eq("deliveryId", deliveryId)
-    .eq("status", "accepted")
+    .eq("status", "En entrega")
     .order("createdAt", { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data;
 };

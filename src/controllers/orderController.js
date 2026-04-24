@@ -3,6 +3,7 @@ import {
   getAllOrders,
   getOrderById,
   updateOrder,
+  updateOrderPosition,
   getOrdersByConsumerId,
   getOrdersByStoreId,
   getAvailableOrders,
@@ -11,10 +12,16 @@ import {
 
 export const createNewOrder = async (req, res) => {
   try {
-    const { consumerId, storeId, productId, quantity } = req.body;
+    const { consumerId, storeId, productId, quantity, destination } = req.body;
 
-    if (!consumerId || !storeId || !productId || !quantity) {
+    if (!consumerId || !storeId || !productId || !quantity || !destination) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const { lat, lng } = destination;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ message: "Destination lat and lng are required" });
     }
 
     const newOrder = {
@@ -23,8 +30,9 @@ export const createNewOrder = async (req, res) => {
       storeId,
       productId,
       quantity,
-      status: "pending",
-      deliveryId: null
+      status: "Creado",
+      deliveryId: null,
+      destination: `SRID=4326;POINT(${lng} ${lat})`
     };
 
     const savedOrder = await createOrder(newOrder);
@@ -114,7 +122,7 @@ export const acceptOrder = async (req, res) => {
     }
 
     const updatedOrder = await updateOrder(id, {
-      status: "accepted",
+      status: "En entrega",
       deliveryId
     });
 
@@ -129,7 +137,7 @@ export const declineOrder = async (req, res) => {
     const { id } = req.params;
 
     const updatedOrder = await updateOrder(id, {
-      status: "declined"
+      status: "Declinado"
     });
 
     res.json(updatedOrder);
@@ -143,8 +151,25 @@ export const markOrderDelivered = async (req, res) => {
     const { id } = req.params;
 
     const updatedOrder = await updateOrder(id, {
-      status: "delivered"
+      status: "Entregado"
     });
+
+    res.json(updatedOrder);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateDeliveryPosition = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { lat, lng } = req.body;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ message: "lat and lng are required" });
+    }
+
+    const updatedOrder = await updateOrderPosition(id, lat, lng);
 
     res.json(updatedOrder);
   } catch (error) {

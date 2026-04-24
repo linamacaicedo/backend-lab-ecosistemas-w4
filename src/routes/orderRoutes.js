@@ -9,7 +9,8 @@ import {
   getSingleOrder,
   acceptOrder,
   declineOrder,
-  markOrderDelivered
+  markOrderDelivered,
+  updateDeliveryPosition
 } from "../controllers/orderController.js";
 
 const router = express.Router();
@@ -27,5 +28,6 @@ router.get("/:id", getSingleOrder);
 router.put("/:id/accept", acceptOrder);
 router.put("/:id/decline", declineOrder);
 router.put("/:id/delivered", markOrderDelivered);
+router.put("/:id/position", updateDeliveryPosition);
 
 export default router;
