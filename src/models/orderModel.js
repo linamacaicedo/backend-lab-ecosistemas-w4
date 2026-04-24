@@ -43,15 +43,11 @@ export const updateOrder = async (id, fields) => {
 };
 
 export const updateOrderPosition = async (id, lat, lng) => {
-  const position = `SRID=4326;POINT(${lng} ${lat})`;
-
-  const { data, error } = await supabase
-    .from("orders")
-    .update({
-      delivery_position: position,
-    })
-    .eq("id", id)
-    .select();
+  const { data, error } = await supabase.rpc("update_position_and_check_arrival", {
+    order_id: Number(id),
+    lat: Number(lat),
+    lng: Number(lng)
+  });
 
   if (error) throw new Error(error.message);
   return data[0];
